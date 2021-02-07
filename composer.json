@@ -1,0 +1,11 @@
+{
+    "require": {
+        "zelenin/telegram-bot-api": "~1.0",
+        "adhocore/env": "^0.1.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Cvar1984\\TeleBot\\":"src/"
+        }
+    }
+}
