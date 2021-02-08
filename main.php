@@ -25,26 +25,14 @@ $botService = new Daemon($botApi);
 $botService
     ->onUpdate(function (UpdateInterface $update) use($botApi) {
         print_r($update);
-        $buttons[] = [
-            new Type\InlineKeyboardButton([
-                'text' => '/masukan_data',
-                'callback_data' => 'ok',
-            ]),
-        ];
-        $buttons[] = [
-            new Type\InlineKeyboardButton([
-                'text' => '/masukan_data2',
-                'callback_data' => 'ok',
-            ]),
-        ];
 
-
-        $response = $botApi->sendMessage([
+        $botApi->sendMessage([
             'chat_id' => $update->message->chat->id,
             'text' => 'Pilih menu yg tersedia',
-            'reply_markup' => new Type\ReplyKeyboardMarkup([
-                'keyboard' => $buttons
-            ])
+            'reply_markup' => (new Modules\Buttons())
+                ->addButton('menu 1', '1')
+                ->addButton('menu 2', '2')
+                ->make()
         ]);
 
         $botApi->sendMessage([
