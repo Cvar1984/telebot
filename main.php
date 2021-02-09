@@ -16,32 +16,48 @@ use Zelenin\Telegram\Bot\Type;
 $dbDriver = Retriever::getEnv('DATA_BASE_DRIVER');
 $dbName = Retriever::getEnv('DATA_BASE_NAME');
 $dbDsn = sprintf('%s:./assets/%s.sqlite', $dbDriver, $dbName);
-$db = Modules\Singleton::make(new \PDO($dbDsn));
+$db = new \PDO($dbDsn);
 
 $botToken = Retriever::getEnv('BOT_TOKEN');
-$botApi = ApiFactory::create($botToken);
-$botService = new Daemon($botApi);
+$bot = ApiFactory::create($botToken);
+$botService = new Daemon($bot);
 
 $botService
-    ->onUpdate(function (UpdateInterface $update) use($botApi) {
+    ->onUpdate(function (UpdateInterface $update) use($bot, $db) {
         print_r($update);
+        if(preg_match('/^\/simpan\s(\d+)\s(\w+)/ms', $update->message->text, $result)) {
+            $noHp = $result[1];
+            $idPaket = $result[2];
+            $sql = 'INSERT INTO "penjualan" ("id","nomor_hp","id_packet") VALUES (NULL,:no_hp, :id_packet)';
+            
+            $sth = $db->prepare($sql, [
+                PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY
+            ]);
 
-        $botApi->sendMessage([
-            'chat_id' => $update->message->chat->id,
-            'text' => 'Pilih menu yg tersedia',
-            'reply_markup' => (new Modules\Buttons())
-                ->addButton('menu 1', '1')
-                ->addButton('menu 2', '2')
-                ->make()
-        ]);
-
-        $botApi->sendMessage([
-            'chat_id' => $update->message->chat->id,
-            'text' => sprintf('anda memilih %s', $update->message->text),
-            'reply_markup' => new Type\ReplyKeyboardHide([
-                'hide_keyboard' => true
-            ])
-        ]);
+            $status = $sth->execute([
+                ':no_hp' => $noHp,
+                ':id_packet' => $idPaket
+            ]);
+            
+            if($status) {
+                $bot->sendMessage([
+                    'chat_id' => $update->message->chat->id,
+                    'text'=> sprintf('nomor *%s* dengan paket *%s* tersimpan', $noHp, $idPaket),
+                    'parse_mode' => 'Markdown'
+                ]);
+            } else {
+                $bot->sendMessage([
+                    'chat_id' => $update->message->chat->id,
+                    'text'=> sprintf('nomor *%s* dengan paket *%s* tidak dapat simpan', $noHp, $idPaket),
+                    'parse_mode' => 'Markdown'
+                ]);
+            }
+        }
+        elseif(preg_match('/^\/ambil\s(\w+)\s(\d+)\s(\d+)/ms', $update->message->text, $result)) {
+            $subject = $result[1];
+            $waktuPrimer = $result[2];
+            $waktuSekunder = $result[3];
+        }
     }
 );
 

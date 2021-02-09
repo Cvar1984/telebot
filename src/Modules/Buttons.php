@@ -9,10 +9,6 @@ class Buttons {
     protected array $buttonCallbacks;
     protected array $buttons;
 
-    public function __construct()
-    {
-        return $this;
-    }
     public function make()
     {
         $buttonCount = count($this->buttonNames);
