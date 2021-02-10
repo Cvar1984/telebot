@@ -28,7 +28,7 @@ $botService
         if(preg_match('/^\/simpan\s(\d+)\s(\w+)/ms', $update->message->text, $result)) {
             $noHp = $result[1];
             $idPaket = $result[2];
-            $sql = 'INSERT INTO "penjualan" ("id","nomor_hp","id_packet") VALUES (NULL,:no_hp, :id_packet)';
+            $sql = 'INSERT INTO "penjualan" ("id","no_hp","id_packet") VALUES (NULL,:no_hp, :id_packet)';
             
             $sth = $db->prepare($sql, [
                 PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY
@@ -53,10 +53,33 @@ $botService
                 ]);
             }
         }
-        elseif(preg_match('/^\/ambil\s(\w+)\s(\d+)\s(\d+)/ms', $update->message->text, $result)) {
+        elseif(preg_match('/^\/ambil\s(\w+)\s(\d{2})-(\d{2})\s(\d{2})-(\d{2})/ms', $update->message->text, $result)) {
             $subject = $result[1];
-            $waktuPrimer = $result[2];
-            $waktuSekunder = $result[3];
+            $hariPrimer = $result[2];
+            $bulanPrimer = $result[3];
+            $hariSekunder = $result[4];
+            $bulanSekunder = $result[5];
+
+            $tahun = date('Y');
+            $tanggalPrimer = sprintf('%s-%s-%s', $tahun, $bulanPrimer, $hariPrimer);
+            $tanggalSekunder = sprintf('%s-%s-%s', $tahun, $bulanSekunder, $hariSekunder);
+            $sql = 'SELECT * from "penjualan" WHERE "waktu_simpan" BETWEEN :waktu_primer AND :waktu_sekunder';
+
+            $sth = $db->prepare($sql, [
+                PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY
+            ]);
+            
+
+            $sth->execute([
+                ':waktu_primer' => $tanggalPrimer,
+                ':waktu_sekunder' => $tanggalSekunder,
+            ]);
+
+            $result = $sth->fetchAll(PDO::FETCH_ASSOC);
+            $bot->sendMessage([
+                'chat_id' => $update->message->chat->id,
+                'text' => json_encode($result, JSON_PRETTY_PRINT),
+            ]);
         }
     }
 );
